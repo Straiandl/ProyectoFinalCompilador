@@ -1,0 +1,753 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Fase 1 - Analizador léxico del traductor.
+Basado en las categorías y números definidos en compilador.inf.
+
+Se conservan las clases de POO del proyecto original y se agrega:
+- Token
+- Lista de tokens
+- Lectura de archivos
+- Identificadores
+- Enteros y reales
+- Cadenas
+- Palabras reservadas
+- Operadores y delimitadores
+- Errores léxicos con línea y columna
+"""
+
+import sys
+
+
+# ============================================================
+# POO DEL PROYECTO ORIGINAL
+# ============================================================
+
+class Alumno:
+    def __init__(self, codigo: str):
+        self.codigo = codigo
+
+    def muestra(self):
+        pass
+
+
+class Bachillerato(Alumno):
+    def __init__(self, codigo: str, preparatoria: str):
+        super().__init__(codigo)
+        self.preparatoria = preparatoria
+
+    def muestra(self):
+        print(f"[Alumno Bachillerato] Código: {self.codigo} | Preparatoria: {self.preparatoria}")
+
+
+class Licenciatura(Alumno):
+    def __init__(self, codigo: str, carrera: str, creditos: int):
+        super().__init__(codigo)
+        self.carrera = carrera
+        self.creditos = creditos
+
+    def muestra(self):
+        print(f"[Alumno Licenciatura] Código: {self.codigo} | Carrera: {self.carrera} | Créditos: {self.creditos}")
+
+
+class ElementoPila:
+    def muestra(self):
+        pass
+
+    def __str__(self):
+        return ""
+
+
+class Nodo:
+    """Nodo del árbol de análisis sintáctico construido durante las reducciones LR."""
+
+    def __init__(self, nombre: str, valor=None, hijos=None):
+        self.nombre = nombre
+        self.valor = valor
+        self.hijos = list(hijos) if hijos is not None else []
+
+    def agregar_hijo(self, hijo):
+        self.hijos.append(hijo)
+
+    def imprimir(self, prefijo="", es_ultimo=True, raiz=True):
+        """Imprime el árbol con conectores para visualizar su jerarquía."""
+        if raiz:
+            print(self._etiqueta())
+            nuevo_prefijo = ""
+        else:
+            conector = "└── " if es_ultimo else "├── "
+            print(prefijo + conector + self._etiqueta())
+            nuevo_prefijo = prefijo + ("    " if es_ultimo else "│   ")
+
+        for indice, hijo in enumerate(self.hijos):
+            hijo.imprimir(
+                prefijo=nuevo_prefijo,
+                es_ultimo=(indice == len(self.hijos) - 1),
+                raiz=False,
+            )
+
+    def _etiqueta(self):
+        if self.valor is None:
+            return self.nombre
+        return f"{self.nombre}: {self.valor}"
+
+
+class Terminal(ElementoPila):
+    def __init__(self, tipo: int, simbolo: str, nodo=None):
+        self.tipo = tipo
+        self.simbolo = simbolo
+        self.nodo = nodo
+
+    def muestra(self):
+        print(f"Terminal('{self.simbolo}', tipo={self.tipo})", end=" ")
+
+    def __str__(self):
+        return self.simbolo
+
+
+class NoTerminal(ElementoPila):
+    def __init__(self, tipo: int, simbolo: str, nodo=None):
+        self.tipo = tipo
+        self.simbolo = simbolo
+        self.nodo = nodo
+
+    def muestra(self):
+        print(f"NoTerminal('{self.simbolo}', tipo={self.tipo})", end=" ")
+
+    def __str__(self):
+        return self.simbolo
+
+
+class Estado(ElementoPila):
+    def __init__(self, estado: int):
+        self.estado = estado
+
+    def muestra(self):
+        print(f"Estado({self.estado})", end=" ")
+
+    def __str__(self):
+        return str(self.estado)
+
+
+class Pila:
+    def __init__(self):
+        self.items = []
+
+    def push(self, elem: ElementoPila):
+        self.items.append(elem)
+
+    def pop(self) -> ElementoPila:
+        if not self.is_empty():
+            return self.items.pop()
+        raise IndexError("Intento de pop en una pila vacía.")
+
+    def top(self) -> ElementoPila:
+        if not self.is_empty():
+            return self.items[-1]
+        raise IndexError("Intento de top en una pila vacía.")
+
+    def is_empty(self) -> bool:
+        return len(self.items) == 0
+
+    def muestra(self):
+        print("  Pila: [ " + " ".join(str(x) for x in self.items) + " ]")
+
+
+# ============================================================
+# TOKEN
+# ============================================================
+
+class Token:
+    """Token producido por el analizador léxico."""
+
+    def __init__(self, tipo: int, lexema: str, linea: int, columna: int, nombre: str):
+        self.tipo = tipo
+        self.lexema = lexema
+        self.linea = linea
+        self.columna = columna
+        self.nombre = nombre
+
+    def __str__(self):
+        return (
+            f"{self.nombre:<15} "
+            f"lexema={self.lexema!r:<18} "
+            f"tipo={self.tipo:<2} "
+            f"línea={self.linea:<3} "
+            f"columna={self.columna}"
+        )
+
+    def muestra(self):
+        print(self)
+
+
+# ============================================================
+# CONSTANTES DE compilador.inf
+# ============================================================
+
+TIPOS_TOKEN = {
+    "identificador": 0,
+    "entero": 1,
+    "real": 2,
+    "cadena": 3,
+    "tipo": 4,
+    "opSuma": 5,
+    "opMul": 6,
+    "opRelac": 7,
+    "opOr": 8,
+    "opAnd": 9,
+    "opNot": 10,
+    "opIgualdad": 11,
+    ";": 12,
+    ",": 13,
+    "(": 14,
+    ")": 15,
+    "{": 16,
+    "}": 17,
+    "=": 18,
+    "if": 19,
+    "while": 20,
+    "return": 21,
+    "else": 22,
+    "$": 23,
+}
+
+PALABRAS_RESERVADAS = {
+    "if": ("if", TIPOS_TOKEN["if"]),
+    "while": ("while", TIPOS_TOKEN["while"]),
+    "return": ("return", TIPOS_TOKEN["return"]),
+    "else": ("else", TIPOS_TOKEN["else"]),
+}
+
+# El .inf define la categoría "tipo", pero no enumera aquí los lexemas.
+# Se dejan centralizados para poder ajustarlos a la especificación del profesor.
+TIPOS_DATOS = {"int", "float", "char", "void"}
+
+OPERADORES_DOS = {
+    "||": ("opOr", TIPOS_TOKEN["opOr"]),
+    "&&": ("opAnd", TIPOS_TOKEN["opAnd"]),
+    "==": ("opIgualdad", TIPOS_TOKEN["opIgualdad"]),
+    "!=": ("opIgualdad", TIPOS_TOKEN["opIgualdad"]),
+    "<=": ("opRelac", TIPOS_TOKEN["opRelac"]),
+    ">=": ("opRelac", TIPOS_TOKEN["opRelac"]),
+}
+
+OPERADORES_UNO = {
+    "+": ("opSuma", TIPOS_TOKEN["opSuma"]),
+    "-": ("opSuma", TIPOS_TOKEN["opSuma"]),
+    "*": ("opMul", TIPOS_TOKEN["opMul"]),
+    "/": ("opMul", TIPOS_TOKEN["opMul"]),
+    "<": ("opRelac", TIPOS_TOKEN["opRelac"]),
+    ">": ("opRelac", TIPOS_TOKEN["opRelac"]),
+    "!": ("opNot", TIPOS_TOKEN["opNot"]),
+    "=": ("=", TIPOS_TOKEN["="]),
+}
+
+DELIMITADORES = {
+    ";": (";", TIPOS_TOKEN[";"]),
+    ",": (",", TIPOS_TOKEN[","]),
+    "(": ("(", TIPOS_TOKEN["("]),
+    ")": (")", TIPOS_TOKEN[")"]),
+    "{": ("{", TIPOS_TOKEN["{"]),
+    "}": ("}", TIPOS_TOKEN["}"]),
+}
+
+
+class ErrorLexico(Exception):
+    def __init__(self, mensaje: str, linea: int, columna: int):
+        self.mensaje = mensaje
+        self.linea = linea
+        self.columna = columna
+        super().__init__(mensaje)
+
+    def __str__(self):
+        return f"Error léxico en línea {self.linea}, columna {self.columna}: {self.mensaje}"
+
+
+# ============================================================
+# ANALIZADOR LÉXICO
+# ============================================================
+
+class Lexico:
+    def __init__(self, cadena: str = ""):
+        self.cadena = cadena
+        self.pos = 0
+        self.linea = 1
+        self.columna = 1
+        self.errores = []
+
+    @classmethod
+    def desde_archivo(cls, nombre_archivo: str):
+        with open(nombre_archivo, "r", encoding="utf-8") as archivo:
+            return cls(archivo.read())
+
+    def _actual(self):
+        if self.pos >= len(self.cadena):
+            return None
+        return self.cadena[self.pos]
+
+    def _mirar(self, n=1):
+        return self.cadena[self.pos:self.pos + n]
+
+    def _avanzar(self):
+        if self.pos >= len(self.cadena):
+            return
+        c = self.cadena[self.pos]
+        self.pos += 1
+        if c == "\n":
+            self.linea += 1
+            self.columna = 1
+        else:
+            self.columna += 1
+
+    def _error(self, mensaje, linea=None, columna=None):
+        self.errores.append(
+            ErrorLexico(
+                mensaje,
+                self.linea if linea is None else linea,
+                self.columna if columna is None else columna,
+            )
+        )
+
+    def _identificador(self):
+        linea, columna, inicio = self.linea, self.columna, self.pos
+        while True:
+            c = self._actual()
+            if c is not None and (c.isalnum() or c == "_"):
+                self._avanzar()
+            else:
+                break
+
+        lexema = self.cadena[inicio:self.pos]
+        if lexema in PALABRAS_RESERVADAS:
+            nombre, tipo = PALABRAS_RESERVADAS[lexema]
+        elif lexema in TIPOS_DATOS:
+            nombre, tipo = "tipo", TIPOS_TOKEN["tipo"]
+        else:
+            nombre, tipo = "identificador", TIPOS_TOKEN["identificador"]
+        return Token(tipo, lexema, linea, columna, nombre)
+
+    def _numero(self):
+        linea, columna, inicio = self.linea, self.columna, self.pos
+        while self._actual() is not None and self._actual().isdigit():
+            self._avanzar()
+
+        es_real = False
+        if self._actual() == ".":
+            if len(self._mirar(2)) == 2 and self._mirar(2)[1].isdigit():
+                es_real = True
+                self._avanzar()
+                while self._actual() is not None and self._actual().isdigit():
+                    self._avanzar()
+            else:
+                self._error("Número mal formado: se esperaba un dígito después del punto.")
+                self._avanzar()
+
+        # Casos como 12abc no se consideran un número válido.
+        c = self._actual()
+        if c is not None and (c.isalpha() or c == "_"):
+            while self._actual() is not None and (self._actual().isalnum() or self._actual() == "_"):
+                self._avanzar()
+            lexema = self.cadena[inicio:self.pos]
+            self._error(f"Token numérico mal formado: {lexema!r}", linea, columna)
+            return None
+
+        lexema = self.cadena[inicio:self.pos]
+        if es_real:
+            return Token(TIPOS_TOKEN["real"], lexema, linea, columna, "real")
+        return Token(TIPOS_TOKEN["entero"], lexema, linea, columna, "entero")
+
+    def _cadena(self):
+        linea, columna = self.linea, self.columna
+        self._avanzar()  # comilla inicial
+        caracteres = []
+        while True:
+            c = self._actual()
+            if c is None:
+                self._error("Cadena sin cerrar.", linea, columna)
+                return None
+            if c == '"':
+                self._avanzar()
+                return Token(TIPOS_TOKEN["cadena"], "".join(caracteres), linea, columna, "cadena")
+            if c == "\n":
+                self._error("Cadena sin cerrar antes del final de línea.", linea, columna)
+                return None
+            caracteres.append(c)
+            self._avanzar()
+
+    def _operador(self):
+        linea, columna = self.linea, self.columna
+        dos = self._mirar(2)
+        if dos in OPERADORES_DOS:
+            nombre, tipo = OPERADORES_DOS[dos]
+            self._avanzar(); self._avanzar()
+            return Token(tipo, dos, linea, columna, nombre)
+
+        uno = self._actual()
+        if uno in OPERADORES_UNO:
+            nombre, tipo = OPERADORES_UNO[uno]
+            self._avanzar()
+            return Token(tipo, uno, linea, columna, nombre)
+        return None
+
+    def _delimitador(self):
+        linea, columna = self.linea, self.columna
+        c = self._actual()
+        if c not in DELIMITADORES:
+            return None
+        nombre, tipo = DELIMITADORES[c]
+        self._avanzar()
+        return Token(tipo, c, linea, columna, nombre)
+
+    def tokenizar(self):
+        tokens = []
+        while self.pos < len(self.cadena):
+            c = self._actual()
+            if c.isspace():
+                self._avanzar()
+                continue
+
+            token = None
+            if c.isalpha() or c == "_":
+                token = self._identificador()
+            elif c.isdigit():
+                token = self._numero()
+            elif c == '"':
+                token = self._cadena()
+            elif c in "+-*/<>=!&|":
+                token = self._operador()
+                if token is None:
+                    self._error(f"Operador no reconocido: {c!r}")
+                    self._avanzar()
+            elif c in DELIMITADORES:
+                token = self._delimitador()
+            elif c == "$":
+                linea, columna = self.linea, self.columna
+                self._avanzar()
+                token = Token(TIPOS_TOKEN["$"], "$", linea, columna, "$")
+            else:
+                self._error(f"Carácter no reconocido: {c!r}")
+                self._avanzar()
+
+            if token is not None:
+                tokens.append(token)
+
+        # Símbolo de fin de entrada esperado por la tabla LR.
+        if not tokens or tokens[-1].tipo != TIPOS_TOKEN["$"]:
+            tokens.append(Token(TIPOS_TOKEN["$"], "$", self.linea, self.columna, "$"))
+        return tokens
+
+
+# ============================================================
+# ANALIZADOR SINTÁCTICO LR(1)
+# ============================================================
+
+class ParserLR:
+    """Parser LR que carga las reglas y la tabla desde compilador.lr."""
+
+    def __init__(self, archivo_lr="compilador.lr", mostrar_pasos=True):
+        self.archivo_lr = archivo_lr
+        self.mostrar_pasos = mostrar_pasos
+        self.id_reglas = []
+        self.longitudes_reglas = []
+        self.nombres_reglas = []
+        self.tabla = []
+        self.columnas = 0
+        self.arbol = None
+        self._cargar_tabla()
+
+    def _cargar_tabla(self):
+        """Carga reglas, dimensiones y matriz del archivo .lr."""
+        try:
+            with open(self.archivo_lr, "r", encoding="utf-8-sig") as archivo:
+                lineas = [linea.strip() for linea in archivo if linea.strip()]
+        except OSError as exc:
+            raise OSError(f"No se pudo abrir la tabla LR '{self.archivo_lr}': {exc}")
+
+        try:
+            indice = 0
+            cantidad_reglas = int(lineas[indice].split()[0])
+            indice += 1
+
+            for numero in range(cantidad_reglas):
+                partes = lineas[indice].split()
+                indice += 1
+                if len(partes) < 3:
+                    raise ValueError(
+                        f"La definición de la regla {numero + 1} está incompleta."
+                    )
+                self.id_reglas.append(int(partes[0]))
+                self.longitudes_reglas.append(int(partes[1]))
+                self.nombres_reglas.append(partes[2])
+
+            dimensiones = lineas[indice].split()
+            indice += 1
+            if len(dimensiones) != 2:
+                raise ValueError("No se encontraron las dimensiones de la tabla LR.")
+
+            filas = int(dimensiones[0])
+            self.columnas = int(dimensiones[1])
+
+            for fila_num in range(filas):
+                if indice >= len(lineas):
+                    raise ValueError(f"Falta la fila {fila_num} de la tabla LR.")
+                fila = [int(valor) for valor in lineas[indice].split()]
+                indice += 1
+                if len(fila) != self.columnas:
+                    raise ValueError(
+                        f"La fila {fila_num} tiene {len(fila)} columnas; "
+                        f"se esperaban {self.columnas}."
+                    )
+                self.tabla.append(fila)
+
+            if len(self.id_reglas) != cantidad_reglas:
+                raise ValueError("La cantidad de reglas leídas no coincide.")
+
+        except (IndexError, ValueError) as exc:
+            raise ValueError(f"Formato inválido en '{self.archivo_lr}': {exc}") from exc
+
+        if self.mostrar_pasos:
+            print(
+                f"Tabla LR cargada: {len(self.id_reglas)} reglas, "
+                f"{len(self.tabla)} estados, {self.columnas} columnas."
+            )
+
+    def analizar(self, tokens):
+        """Ejecuta shift/reduce sobre la secuencia de Token."""
+        if not tokens:
+            print("Error: la lista de tokens está vacía.")
+            return False
+
+        self.arbol = None
+        pila = Pila()
+        pila.push(Terminal(TIPOS_TOKEN["$"], "$"))
+        pila.push(Estado(0))
+        posicion = 0
+        paso = 1
+        max_pasos = 100000
+
+        while paso <= max_pasos:
+            if posicion >= len(tokens):
+                print("Error interno: se agotaron los tokens antes de encontrar '$'.")
+                return False
+
+            token = tokens[posicion]
+            elemento_tope = pila.top()
+            if not isinstance(elemento_tope, Estado):
+                print("Error interno: el tope de la pila no es un Estado.")
+                return False
+
+            estado = elemento_tope.estado
+            columna = token.tipo
+
+            if estado < 0 or estado >= len(self.tabla):
+                print(f"Error interno: estado LR fuera de rango: {estado}.")
+                return False
+            if columna < 0 or columna >= self.columnas:
+                print(
+                    f"Error interno: token {token.nombre!r} usa la columna "
+                    f"inválida {columna}."
+                )
+                return False
+
+            accion = self.tabla[estado][columna]
+
+            if self.mostrar_pasos:
+                print(f"\nPaso {paso}")
+                pila.muestra()
+                print(
+                    f"  Entrada: {token.lexema!r} ({token.nombre}, "
+                    f"tipo {token.tipo})"
+                )
+                print(f"  Estado: {estado}; acción de tabla: {accion}")
+
+            # En el formato del profesor, -1 representa aceptación.
+            if accion == -1:
+                # La gramática tiene como símbolo inicial <programa>.
+                for elemento in reversed(pila.items):
+                    if isinstance(elemento, NoTerminal) and elemento.simbolo == "programa":
+                        self.arbol = elemento.nodo
+                        break
+
+                print("\n>>> ANÁLISIS SINTÁCTICO: CADENA ACEPTADA <<<")
+                if self.arbol is None:
+                    print("Aviso: se aceptó la entrada, pero no se encontró el nodo raíz <programa>.")
+                return True
+
+            # Un valor positivo en columna terminal representa shift.
+            if accion > 0:
+                if self.mostrar_pasos:
+                    print(f"  Shift: entrar al estado {accion}.")
+                nodo_terminal = Nodo(token.nombre, token.lexema)
+                pila.push(Terminal(token.tipo, token.lexema, nodo_terminal))
+                pila.push(Estado(accion))
+                posicion += 1
+
+            # -2 corresponde a la regla 1, -3 a la regla 2, etc.
+            elif accion <= -2:
+                indice_regla = abs(accion) - 2
+                if indice_regla < 0 or indice_regla >= len(self.id_reglas):
+                    print(f"Error interno: reducción desconocida {accion}.")
+                    return False
+
+                longitud = self.longitudes_reglas[indice_regla]
+                id_no_terminal = self.id_reglas[indice_regla]
+                nombre_no_terminal = self.nombres_reglas[indice_regla]
+
+                if self.mostrar_pasos:
+                    print(
+                        f"  Reduce por R{indice_regla + 1}: "
+                        f"{nombre_no_terminal}; longitud {longitud}."
+                    )
+
+                # Recuperar los nodos de los símbolos del lado derecho.
+                # En la pila LR hay un Estado y un símbolo por cada elemento
+                # de la producción. Se extraen de derecha a izquierda y luego
+                # se invierte la lista para conservar el orden original.
+                hijos = []
+                for _ in range(longitud):
+                    if pila.is_empty():
+                        print("Error interno: la pila se vació durante una reducción.")
+                        return False
+                    pila.pop()  # Estado asociado al símbolo
+                    if pila.is_empty():
+                        print("Error interno: falta un símbolo durante la reducción.")
+                        return False
+                    simbolo_reducido = pila.pop()
+                    nodo_hijo = getattr(simbolo_reducido, "nodo", None)
+                    if nodo_hijo is not None:
+                        hijos.append(nodo_hijo)
+
+                hijos.reverse()
+                if longitud == 0:
+                    # Las producciones epsilon se conservan como hojas del árbol.
+                    nodo_padre = Nodo(nombre_no_terminal, "ε")
+                else:
+                    nodo_padre = Nodo(nombre_no_terminal, hijos=hijos)
+
+                tope = pila.top()
+                if not isinstance(tope, Estado):
+                    print("Error interno: se esperaba un Estado tras la reducción.")
+                    return False
+
+                estado_anterior = tope.estado
+                if not 0 <= id_no_terminal < self.columnas:
+                    print(f"Error interno: GOTO inválido para {nombre_no_terminal}.")
+                    return False
+
+                nuevo_estado = self.tabla[estado_anterior][id_no_terminal]
+                if nuevo_estado <= 0:
+                    print(
+                        "Error interno: transición GOTO inválida para "
+                        f"{nombre_no_terminal} desde el estado {estado_anterior}."
+                    )
+                    return False
+
+                pila.push(NoTerminal(id_no_terminal, nombre_no_terminal, nodo_padre))
+                pila.push(Estado(nuevo_estado))
+
+            # Cero significa que la tabla no permite esa acción.
+            else:
+                print(
+                    "\n>>> ERROR SINTÁCTICO: token inesperado "
+                    f"{token.lexema!r} en línea {token.linea}, "
+                    f"columna {token.columna}. <<<"
+                )
+                return False
+
+            paso += 1
+
+        print("Error: se alcanzó el límite de pasos del parser.")
+        return False
+
+
+# ============================================================
+# DEMOSTRACIONES
+# ============================================================
+
+def ejemplo_polimorfismo():
+    print("=" * 70)
+    print("DEMO: POLIMORFISMO")
+    print("=" * 70)
+    alumnos = [
+        Licenciatura("345678", "Computacion", 200),
+        Bachillerato("456789", "Preparatoria 12"),
+        Licenciatura("987654", "Informatica", 50),
+    ]
+    for alumno in reversed(alumnos):
+        alumno.muestra()
+
+
+def ejemplo_pila():
+    print("\n" + "=" * 70)
+    print("DEMO: PILA DE OBJETOS")
+    print("=" * 70)
+    pila = Pila()
+    pila.push(Terminal(TIPOS_TOKEN["$"], "$"))
+    pila.push(Estado(0))
+    pila.push(Terminal(TIPOS_TOKEN["identificador"], "x"))
+    pila.push(Estado(2))
+    pila.muestra()
+    print("Top:", pila.top())
+
+
+def analizar_archivo(nombre_archivo: str, archivo_lr="compilador.lr"):
+    print("=" * 70)
+    print(f"ANÁLISIS DEL ARCHIVO: {nombre_archivo}")
+    print("=" * 70)
+    try:
+        lexico = Lexico.desde_archivo(nombre_archivo)
+        tokens = lexico.tokenizar()
+    except OSError as exc:
+        print(f"No se pudo leer el archivo de entrada: {exc}")
+        return 1
+
+    print("\nTOKENS GENERADOS")
+    print("-" * 70)
+    for token in tokens:
+        print(token)
+
+    print("\nERRORES LÉXICOS")
+    print("-" * 70)
+    if lexico.errores:
+        for error in lexico.errores:
+            print(error)
+        print("\nNo se ejecuta el parser porque hay errores léxicos.")
+        return 1
+    print("No se encontraron errores léxicos.")
+
+    try:
+        parser = ParserLR(archivo_lr=archivo_lr, mostrar_pasos=True)
+    except (OSError, ValueError) as exc:
+        print(f"No se pudo cargar el parser LR: {exc}")
+        return 1
+
+    print("\nINICIANDO ANÁLISIS SINTÁCTICO")
+    resultado = parser.analizar(tokens)
+    if resultado and parser.arbol is not None:
+        print("\nÁRBOL DE ANÁLISIS SINTÁCTICO")
+        print("-" * 70)
+        parser.arbol.imprimir()
+    return 0 if resultado else 1
+
+def main():
+    import argparse
+    from pathlib import Path
+
+    parser_args = argparse.ArgumentParser(
+        description="Analizador léxico y sintáctico LR(1)."
+    )
+    parser_args.add_argument(
+        "archivo_fuente",
+        help="Archivo .txt que contiene el programa que se analizará."
+    )
+    parser_args.add_argument(
+        "--lr",
+        default=str(Path(__file__).with_name("compilador.lr")),
+        help="Ruta del archivo de tabla LR (por defecto, junto al script)."
+    )
+    argumentos = parser_args.parse_args()
+    return analizar_archivo(argumentos.archivo_fuente, argumentos.lr)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

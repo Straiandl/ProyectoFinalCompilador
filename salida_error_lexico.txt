@@ -1,0 +1,22 @@
+======================================================================
+ANÁLISIS DEL ARCHIVO: error_lexico.txt
+======================================================================
+
+TOKENS GENERADOS
+----------------------------------------------------------------------
+tipo            lexema='int'              tipo=4  línea=1   columna=1
+identificador   lexema='main'             tipo=0  línea=1   columna=5
+(               lexema='('                tipo=14 línea=1   columna=9
+)               lexema=')'                tipo=15 línea=1   columna=10
+{               lexema='{'                tipo=16 línea=1   columna=12
+return          lexema='return'           tipo=21 línea=2   columna=5
+entero          lexema='0'                tipo=1  línea=2   columna=12
+;               lexema=';'                tipo=12 línea=2   columna=15
+}               lexema='}'                tipo=17 línea=3   columna=1
+$               lexema='$'                tipo=23 línea=4   columna=1
+
+ERRORES LÉXICOS
+----------------------------------------------------------------------
+Error léxico en línea 2, columna 14: Carácter no reconocido: '@'
+
+No se ejecuta el parser porque hay errores léxicos.

@@ -1,0 +1,387 @@
+======================================================================
+ANÁLISIS DEL ARCHIVO: prueba_arbol_expresiones.txt
+======================================================================
+
+TOKENS GENERADOS
+----------------------------------------------------------------------
+tipo            lexema='int'              tipo=4  línea=1   columna=1
+identificador   lexema='main'             tipo=0  línea=1   columna=5
+(               lexema='('                tipo=14 línea=1   columna=9
+)               lexema=')'                tipo=15 línea=1   columna=10
+{               lexema='{'                tipo=16 línea=1   columna=12
+tipo            lexema='int'              tipo=4  línea=2   columna=5
+identificador   lexema='x'                tipo=0  línea=2   columna=9
+;               lexema=';'                tipo=12 línea=2   columna=10
+identificador   lexema='x'                tipo=0  línea=3   columna=5
+=               lexema='='                tipo=18 línea=3   columna=7
+entero          lexema='2'                tipo=1  línea=3   columna=9
+opSuma          lexema='+'                tipo=5  línea=3   columna=11
+entero          lexema='3'                tipo=1  línea=3   columna=13
+opMul           lexema='*'                tipo=6  línea=3   columna=15
+entero          lexema='4'                tipo=1  línea=3   columna=17
+;               lexema=';'                tipo=12 línea=3   columna=18
+return          lexema='return'           tipo=21 línea=4   columna=5
+identificador   lexema='x'                tipo=0  línea=4   columna=12
+;               lexema=';'                tipo=12 línea=4   columna=13
+}               lexema='}'                tipo=17 línea=5   columna=1
+$               lexema='$'                tipo=23 línea=6   columna=1
+
+ERRORES LÉXICOS
+----------------------------------------------------------------------
+No se encontraron errores léxicos.
+Tabla LR cargada: 52 reglas, 95 estados, 46 columnas.
+
+INICIANDO ANÁLISIS SINTÁCTICO
+
+Paso 1
+  Pila: [ $ 0 ]
+  Entrada: 'int' (tipo, tipo 4)
+  Estado: 0; acción de tabla: 5
+  Shift: entrar al estado 5.
+
+Paso 2
+  Pila: [ $ 0 int 5 ]
+  Entrada: 'main' (identificador, tipo 0)
+  Estado: 5; acción de tabla: 8
+  Shift: entrar al estado 8.
+
+Paso 3
+  Pila: [ $ 0 int 5 main 8 ]
+  Entrada: '(' ((, tipo 14)
+  Estado: 8; acción de tabla: 11
+  Shift: entrar al estado 11.
+
+Paso 4
+  Pila: [ $ 0 int 5 main 8 ( 11 ]
+  Entrada: ')' (), tipo 15)
+  Estado: 11; acción de tabla: -11
+  Reduce por R10: Parametros; longitud 0.
+
+Paso 5
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ]
+  Entrada: ')' (), tipo 15)
+  Estado: 14; acción de tabla: 17
+  Shift: entrar al estado 17.
+
+Paso 6
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 ]
+  Entrada: '{' ({, tipo 16)
+  Estado: 17; acción de tabla: 20
+  Shift: entrar al estado 20.
+
+Paso 7
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 ]
+  Entrada: 'int' (tipo, tipo 4)
+  Estado: 20; acción de tabla: 5
+  Shift: entrar al estado 5.
+
+Paso 8
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 int 5 ]
+  Entrada: 'x' (identificador, tipo 0)
+  Estado: 5; acción de tabla: 8
+  Shift: entrar al estado 8.
+
+Paso 9
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 int 5 x 8 ]
+  Entrada: ';' (;, tipo 12)
+  Estado: 8; acción de tabla: -8
+  Reduce por R7: ListaVar; longitud 0.
+
+Paso 10
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 int 5 x 8 ListaVar 9 ]
+  Entrada: ';' (;, tipo 12)
+  Estado: 9; acción de tabla: 12
+  Shift: entrar al estado 12.
+
+Paso 11
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 int 5 x 8 ListaVar 9 ; 12 ]
+  Entrada: 'x' (identificador, tipo 0)
+  Estado: 12; acción de tabla: -7
+  Reduce por R6: DefVar; longitud 4.
+
+Paso 12
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 DefVar 25 ]
+  Entrada: 'x' (identificador, tipo 0)
+  Estado: 25; acción de tabla: -18
+  Reduce por R17: DefLocal; longitud 1.
+
+Paso 13
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 DefLocal 24 ]
+  Entrada: 'x' (identificador, tipo 0)
+  Estado: 24; acción de tabla: 27
+  Shift: entrar al estado 27.
+
+Paso 14
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 DefLocal 24 x 27 ]
+  Entrada: '=' (=, tipo 18)
+  Estado: 27; acción de tabla: 35
+  Shift: entrar al estado 35.
+
+Paso 15
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 DefLocal 24 x 27 = 35 ]
+  Entrada: '2' (entero, tipo 1)
+  Estado: 35; acción de tabla: 47
+  Shift: entrar al estado 47.
+
+Paso 16
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 DefLocal 24 x 27 = 35 2 47 ]
+  Entrada: '+' (opSuma, tipo 5)
+  Estado: 47; acción de tabla: -38
+  Reduce por R37: Termino; longitud 1.
+
+Paso 17
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 DefLocal 24 x 27 = 35 Termino 44 ]
+  Entrada: '+' (opSuma, tipo 5)
+  Estado: 44; acción de tabla: -53
+  Reduce por R52: Expresion; longitud 1.
+
+Paso 18
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 DefLocal 24 x 27 = 35 Expresion 52 ]
+  Entrada: '+' (opSuma, tipo 5)
+  Estado: 52; acción de tabla: 59
+  Shift: entrar al estado 59.
+
+Paso 19
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 DefLocal 24 x 27 = 35 Expresion 52 + 59 ]
+  Entrada: '3' (entero, tipo 1)
+  Estado: 59; acción de tabla: 47
+  Shift: entrar al estado 47.
+
+Paso 20
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 DefLocal 24 x 27 = 35 Expresion 52 + 59 3 47 ]
+  Entrada: '*' (opMul, tipo 6)
+  Estado: 47; acción de tabla: -38
+  Reduce por R37: Termino; longitud 1.
+
+Paso 21
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 DefLocal 24 x 27 = 35 Expresion 52 + 59 Termino 44 ]
+  Entrada: '*' (opMul, tipo 6)
+  Estado: 44; acción de tabla: -53
+  Reduce por R52: Expresion; longitud 1.
+
+Paso 22
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 DefLocal 24 x 27 = 35 Expresion 52 + 59 Expresion 75 ]
+  Entrada: '*' (opMul, tipo 6)
+  Estado: 75; acción de tabla: 58
+  Shift: entrar al estado 58.
+
+Paso 23
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 DefLocal 24 x 27 = 35 Expresion 52 + 59 Expresion 75 * 58 ]
+  Entrada: '4' (entero, tipo 1)
+  Estado: 58; acción de tabla: 47
+  Shift: entrar al estado 47.
+
+Paso 24
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 DefLocal 24 x 27 = 35 Expresion 52 + 59 Expresion 75 * 58 4 47 ]
+  Entrada: ';' (;, tipo 12)
+  Estado: 47; acción de tabla: -38
+  Reduce por R37: Termino; longitud 1.
+
+Paso 25
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 DefLocal 24 x 27 = 35 Expresion 52 + 59 Expresion 75 * 58 Termino 44 ]
+  Entrada: ';' (;, tipo 12)
+  Estado: 44; acción de tabla: -53
+  Reduce por R52: Expresion; longitud 1.
+
+Paso 26
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 DefLocal 24 x 27 = 35 Expresion 52 + 59 Expresion 75 * 58 Expresion 74 ]
+  Entrada: ';' (;, tipo 12)
+  Estado: 74; acción de tabla: -47
+  Reduce por R46: Expresion; longitud 3.
+
+Paso 27
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 DefLocal 24 x 27 = 35 Expresion 52 + 59 Expresion 75 ]
+  Entrada: ';' (;, tipo 12)
+  Estado: 75; acción de tabla: -48
+  Reduce por R47: Expresion; longitud 3.
+
+Paso 28
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 DefLocal 24 x 27 = 35 Expresion 52 ]
+  Entrada: ';' (;, tipo 12)
+  Estado: 52; acción de tabla: 68
+  Shift: entrar al estado 68.
+
+Paso 29
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 DefLocal 24 x 27 = 35 Expresion 52 ; 68 ]
+  Entrada: 'return' (return, tipo 21)
+  Estado: 68; acción de tabla: -22
+  Reduce por R21: Sentencia; longitud 4.
+
+Paso 30
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 DefLocal 24 Sentencia 26 ]
+  Entrada: 'return' (return, tipo 21)
+  Estado: 26; acción de tabla: -19
+  Reduce por R18: DefLocal; longitud 1.
+
+Paso 31
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 DefLocal 24 DefLocal 24 ]
+  Entrada: 'return' (return, tipo 21)
+  Estado: 24; acción de tabla: 30
+  Shift: entrar al estado 30.
+
+Paso 32
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 DefLocal 24 DefLocal 24 return 30 ]
+  Entrada: 'x' (identificador, tipo 0)
+  Estado: 30; acción de tabla: 46
+  Shift: entrar al estado 46.
+
+Paso 33
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 DefLocal 24 DefLocal 24 return 30 x 46 ]
+  Entrada: ';' (;, tipo 12)
+  Estado: 46; acción de tabla: -37
+  Reduce por R36: Termino; longitud 1.
+
+Paso 34
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 DefLocal 24 DefLocal 24 return 30 Termino 44 ]
+  Entrada: ';' (;, tipo 12)
+  Estado: 44; acción de tabla: -53
+  Reduce por R52: Expresion; longitud 1.
+
+Paso 35
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 DefLocal 24 DefLocal 24 return 30 Expresion 40 ]
+  Entrada: ';' (;, tipo 12)
+  Estado: 40; acción de tabla: -31
+  Reduce por R30: ValorRegresa; longitud 1.
+
+Paso 36
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 DefLocal 24 DefLocal 24 return 30 ValorRegresa 39 ]
+  Entrada: ';' (;, tipo 12)
+  Estado: 39; acción de tabla: 57
+  Shift: entrar al estado 57.
+
+Paso 37
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 DefLocal 24 DefLocal 24 return 30 ValorRegresa 39 ; 57 ]
+  Entrada: '}' (}, tipo 17)
+  Estado: 57; acción de tabla: -25
+  Reduce por R24: Sentencia; longitud 3.
+
+Paso 38
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 DefLocal 24 DefLocal 24 Sentencia 26 ]
+  Entrada: '}' (}, tipo 17)
+  Estado: 26; acción de tabla: -19
+  Reduce por R18: DefLocal; longitud 1.
+
+Paso 39
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 DefLocal 24 DefLocal 24 DefLocal 24 ]
+  Entrada: '}' (}, tipo 17)
+  Estado: 24; acción de tabla: -16
+  Reduce por R15: DefLocales; longitud 0.
+
+Paso 40
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 DefLocal 24 DefLocal 24 DefLocal 24 DefLocales 34 ]
+  Entrada: '}' (}, tipo 17)
+  Estado: 34; acción de tabla: -17
+  Reduce por R16: DefLocales; longitud 2.
+
+Paso 41
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 DefLocal 24 DefLocal 24 DefLocales 34 ]
+  Entrada: '}' (}, tipo 17)
+  Estado: 34; acción de tabla: -17
+  Reduce por R16: DefLocales; longitud 2.
+
+Paso 42
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 DefLocal 24 DefLocales 34 ]
+  Entrada: '}' (}, tipo 17)
+  Estado: 34; acción de tabla: -17
+  Reduce por R16: DefLocales; longitud 2.
+
+Paso 43
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 DefLocales 23 ]
+  Entrada: '}' (}, tipo 17)
+  Estado: 23; acción de tabla: 33
+  Shift: entrar al estado 33.
+
+Paso 44
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 { 20 DefLocales 23 } 33 ]
+  Entrada: '$' ($, tipo 23)
+  Estado: 33; acción de tabla: -15
+  Reduce por R14: BloqFunc; longitud 3.
+
+Paso 45
+  Pila: [ $ 0 int 5 main 8 ( 11 Parametros 14 ) 17 BloqFunc 19 ]
+  Entrada: '$' ($, tipo 23)
+  Estado: 19; acción de tabla: -10
+  Reduce por R9: DefFunc; longitud 6.
+
+Paso 46
+  Pila: [ $ 0 DefFunc 6 ]
+  Entrada: '$' ($, tipo 23)
+  Estado: 6; acción de tabla: -6
+  Reduce por R5: Definicion; longitud 1.
+
+Paso 47
+  Pila: [ $ 0 Definicion 3 ]
+  Entrada: '$' ($, tipo 23)
+  Estado: 3; acción de tabla: -3
+  Reduce por R2: Definiciones; longitud 0.
+
+Paso 48
+  Pila: [ $ 0 Definicion 3 Definiciones 7 ]
+  Entrada: '$' ($, tipo 23)
+  Estado: 7; acción de tabla: -4
+  Reduce por R3: Definiciones; longitud 2.
+
+Paso 49
+  Pila: [ $ 0 Definiciones 2 ]
+  Entrada: '$' ($, tipo 23)
+  Estado: 2; acción de tabla: -2
+  Reduce por R1: programa; longitud 1.
+
+Paso 50
+  Pila: [ $ 0 programa 1 ]
+  Entrada: '$' ($, tipo 23)
+  Estado: 1; acción de tabla: -1
+
+>>> ANÁLISIS SINTÁCTICO: CADENA ACEPTADA <<<
+
+ÁRBOL DE ANÁLISIS SINTÁCTICO
+----------------------------------------------------------------------
+programa
+└── Definiciones
+    ├── Definicion
+    │   └── DefFunc
+    │       ├── tipo: int
+    │       ├── identificador: main
+    │       ├── (: (
+    │       ├── Parametros: ε
+    │       ├── ): )
+    │       └── BloqFunc
+    │           ├── {: {
+    │           ├── DefLocales
+    │           │   ├── DefLocal
+    │           │   │   └── DefVar
+    │           │   │       ├── tipo: int
+    │           │   │       ├── identificador: x
+    │           │   │       ├── ListaVar: ε
+    │           │   │       └── ;: ;
+    │           │   └── DefLocales
+    │           │       ├── DefLocal
+    │           │       │   └── Sentencia
+    │           │       │       ├── identificador: x
+    │           │       │       ├── =: =
+    │           │       │       ├── Expresion
+    │           │       │       │   ├── Expresion
+    │           │       │       │   │   └── Termino
+    │           │       │       │   │       └── entero: 2
+    │           │       │       │   ├── opSuma: +
+    │           │       │       │   └── Expresion
+    │           │       │       │       ├── Expresion
+    │           │       │       │       │   └── Termino
+    │           │       │       │       │       └── entero: 3
+    │           │       │       │       ├── opMul: *
+    │           │       │       │       └── Expresion
+    │           │       │       │           └── Termino
+    │           │       │       │               └── entero: 4
+    │           │       │       └── ;: ;
+    │           │       └── DefLocales
+    │           │           ├── DefLocal
+    │           │           │   └── Sentencia
+    │           │           │       ├── return: return
+    │           │           │       ├── ValorRegresa
+    │           │           │       │   └── Expresion
+    │           │           │       │       └── Termino
+    │           │           │       │           └── identificador: x
+    │           │           │       └── ;: ;
+    │           │           └── DefLocales: ε
+    │           └── }: }
+    └── Definiciones: ε

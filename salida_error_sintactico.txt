@@ -1,0 +1,47 @@
+======================================================================
+ANÁLISIS DEL ARCHIVO: error_sintactico.txt
+======================================================================
+
+TOKENS GENERADOS
+----------------------------------------------------------------------
+tipo            lexema='int'              tipo=4  línea=1   columna=1
+identificador   lexema='main'             tipo=0  línea=1   columna=5
+(               lexema='('                tipo=14 línea=1   columna=9
+{               lexema='{'                tipo=16 línea=1   columna=11
+return          lexema='return'           tipo=21 línea=2   columna=5
+entero          lexema='0'                tipo=1  línea=2   columna=12
+;               lexema=';'                tipo=12 línea=2   columna=13
+}               lexema='}'                tipo=17 línea=3   columna=1
+$               lexema='$'                tipo=23 línea=4   columna=1
+
+ERRORES LÉXICOS
+----------------------------------------------------------------------
+No se encontraron errores léxicos.
+Tabla LR cargada: 52 reglas, 95 estados, 46 columnas.
+
+INICIANDO ANÁLISIS SINTÁCTICO
+
+Paso 1
+  Pila: [ $ 0 ]
+  Entrada: 'int' (tipo, tipo 4)
+  Estado: 0; acción de tabla: 5
+  Shift: entrar al estado 5.
+
+Paso 2
+  Pila: [ $ 0 int 5 ]
+  Entrada: 'main' (identificador, tipo 0)
+  Estado: 5; acción de tabla: 8
+  Shift: entrar al estado 8.
+
+Paso 3
+  Pila: [ $ 0 int 5 main 8 ]
+  Entrada: '(' ((, tipo 14)
+  Estado: 8; acción de tabla: 11
+  Shift: entrar al estado 11.
+
+Paso 4
+  Pila: [ $ 0 int 5 main 8 ( 11 ]
+  Entrada: '{' ({, tipo 16)
+  Estado: 11; acción de tabla: 0
+
+>>> ERROR SINTÁCTICO: token inesperado '{' en línea 1, columna 11. <<<
